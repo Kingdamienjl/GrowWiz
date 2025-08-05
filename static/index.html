@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrowWiz - AI-Powered Cultivation Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-seedling"></i>
+                    <h1>GrowWiz</h1>
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot" id="connectionStatus"></span>
+                    <span id="connectionText">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard -->
+        <main class="dashboard">
+            <!-- Sensor Cards -->
+            <section class="sensor-grid">
+                <div class="sensor-card temperature">
+                    <div class="sensor-icon">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="sensor-info">
+                        <h3>Temperature</h3>
+                        <div class="sensor-value" id="temperature">--°C</div>
+                        <div class="sensor-status" id="tempStatus">Normal</div>
+                    </div>
+                </div>
+
+                <div class="sensor-card humidity">
+                    <div class="sensor-icon">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <div class="sensor-info">
+                        <h3>Humidity</h3>
+                        <div class="sensor-value" id="humidity">--%</div>
+                        <div class="sensor-status" id="humidityStatus">Normal</div>
+                    </div>
+                </div>
+
+                <div class="sensor-card soil">
+                    <div class="sensor-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="sensor-info">
+                        <h3>Soil Moisture</h3>
+                        <div class="sensor-value" id="soilMoisture">--%</div>
+                        <div class="sensor-status" id="soilStatus">Normal</div>
+                    </div>
+                </div>
+
+                <div class="sensor-card co2">
+                    <div class="sensor-icon">
+                        <i class="fas fa-wind"></i>
+                    </div>
+                    <div class="sensor-info">
+                        <h3>CO2 Level</h3>
+                        <div class="sensor-value" id="co2">-- ppm</div>
+                        <div class="sensor-status" id="co2Status">Normal</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="chart-container">
+                    <h3>Environmental Trends</h3>
+                    <canvas id="environmentChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Control Panels -->
+            <section class="control-panels">
+                <!-- Plant Diagnosis Panel -->
+                <div class="control-panel">
+                    <h3><i class="fas fa-camera"></i> Plant Diagnosis</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drop plant image here or click to upload</p>
+                        <input type="file" id="imageUpload" accept="image/*" hidden>
+                    </div>
+                    <div class="diagnosis-result" id="diagnosisResult" style="display: none;">
+                        <h4>Diagnosis Result</h4>
+                        <div id="diagnosisContent"></div>
+                    </div>
+                </div>
+
+                <!-- AI Assistant Panel -->
+                <div class="control-panel">
+                    <h3><i class="fas fa-robot"></i> AI Assistant</h3>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message bot">
+                                <i class="fas fa-robot"></i>
+                                <div class="message-content">
+                                    <p>Hello! I'm your GrowWiz AI assistant. Ask me anything about plant cultivation!</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" id="chatInput" placeholder="Ask about growing, nutrients, problems...">
+                            <button id="sendMessage"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Automation Control Panel -->
+                <div class="control-panel">
+                    <h3><i class="fas fa-cogs"></i> Automation Control</h3>
+                    <div class="automation-grid">
+                        <div class="automation-item">
+                            <label>Fan</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="fanToggle">
+                                <span class="slider"></span>
+                            </div>
+                            <span class="device-status" id="fanStatus">OFF</span>
+                        </div>
+                        
+                        <div class="automation-item">
+                            <label>Heater</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="heaterToggle">
+                                <span class="slider"></span>
+                            </div>
+                            <span class="device-status" id="heaterStatus">OFF</span>
+                        </div>
+                        
+                        <div class="automation-item">
+                            <label>Humidifier</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="humidifierToggle">
+                                <span class="slider"></span>
+                            </div>
+                            <span class="device-status" id="humidifierStatus">OFF</span>
+                        </div>
+                        
+                        <div class="automation-item">
+                            <label>Water Pump</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="pumpToggle">
+                                <span class="slider"></span>
+                            </div>
+                            <span class="device-status" id="pumpStatus">OFF</span>
+                        </div>
+                        
+                        <div class="automation-item">
+                            <label>Lights</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="lightsToggle">
+                                <span class="slider"></span>
+                            </div>
+                            <span class="device-status" id="lightsStatus">OFF</span>
+                        </div>
+                        
+                        <div class="automation-item">
+                            <label>CO2 Valve</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="co2Toggle">
+                                <span class="slider"></span>
+                            </div>
+                            <span class="device-status" id="co2ValveStatus">OFF</span>
+                        </div>
+                    </div>
+                    
+                    <div class="automation-controls">
+                        <button class="btn btn-danger" id="emergencyStop">
+                            <i class="fas fa-stop"></i> Emergency Stop
+                        </button>
+                        <button class="btn btn-secondary" id="refreshAutomation">
+                            <i class="fas fa-sync"></i> Refresh Status
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Activity -->
+            <section class="activity-section">
+                <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                <div class="activity-list" id="activityList">
+                    <div class="activity-item">
+                        <i class="fas fa-info-circle"></i>
+                        <span>System started</span>
+                        <time>Just now</time>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 GrowWiz - AI-Powered Cultivation Assistant</p>
+            <div class="footer-links">
+                <a href="/docs" target="_blank">API Docs</a>
+                <a href="https://github.com/yourusername/growwiz" target="_blank">GitHub</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-seedling fa-spin"></i>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
