@@ -18,14 +18,7 @@ beautifulsoup4==4.12.2
 selenium==4.15.2
 scrapy==2.11.0
 
-# Raspberry Pi GPIO and sensors
-RPi.GPIO==0.7.1
-adafruit-circuitpython-dht==3.7.8
-w1thermsensor==2.0.0
-smbus2==0.4.2
-
 # Database and data handling
-sqlite3
 pandas==2.1.4
 numpy==1.25.2
 
@@ -73,7 +66,7 @@ lxml==4.9.3
 colorthief==0.2.1
 exifread==3.0.0
 orjson==3.9.10
-cryptography==41.0.8
+cryptography>=41.0.0
 distro==1.8.0
 environs==10.0.0
 pyjwt==2.8.0
