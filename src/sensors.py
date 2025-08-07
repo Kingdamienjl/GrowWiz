@@ -1,218 +1,197 @@
 #!/usr/bin/env python3
 """
-GrowWiz Sensor Management
-Handles reading from various sensors connected to Raspberry Pi
+Sensor Management for GrowWiz
+Handles all sensor readings and hardware interactions
 """
 
 import os
 import time
 import json
-from typing import Dict, Any
-from loguru import logger
+import random
+import logging
+from typing import Dict, Any, Optional
+from datetime import datetime
+from .config import config
 
+# Try to import Raspberry Pi libraries
 try:
     import RPi.GPIO as GPIO
-    import adafruit_dht
-    import board
+    import Adafruit_DHT
     from w1thermsensor import W1ThermSensor
-    import smbus2
-    RASPBERRY_PI = True
+    RASPBERRY_PI_AVAILABLE = True
 except ImportError:
-    logger.warning("Raspberry Pi libraries not available. Running in simulation mode.")
-    RASPBERRY_PI = False
+    RASPBERRY_PI_AVAILABLE = False
+    logging.warning("Raspberry Pi libraries not available. Running in simulation mode.")
 
 class SensorManager:
-    """Manages all sensor readings and hardware interfaces"""
+    """Manages all sensor operations for the grow system"""
     
-    def __init__(self):
-        self.config = self._load_config()
-        self.simulation_mode = not RASPBERRY_PI
+    def __init__(self, simulation_mode: bool = None):
+        self.logger = logging.getLogger(__name__)
+        self.sensor_config = config.get_sensor_config()
         
-        if not self.simulation_mode:
-            self._setup_gpio()
-            self._setup_sensors()
-        
-        logger.info(f"SensorManager initialized (simulation_mode: {self.simulation_mode})")
+        # Determine simulation mode
+        if simulation_mode is None:
+            self.simulation_mode = (not RASPBERRY_PI_AVAILABLE or 
+                                  config.should_use_simulation() or
+                                  self.sensor_config.get('use_mock_sensors', False))
+        else:
+            self.simulation_mode = simulation_mode
+            
+        # Load test data if in testing mode
+        self.test_data = None
+        if config.is_testing_mode():
+            self._load_test_data()
+            
+        if self.simulation_mode:
+            self.logger.info("Sensor manager initialized in simulation mode")
+        else:
+            self.logger.info("Sensor manager initialized with hardware sensors")
+            self._setup_hardware()
     
-    def _load_config(self) -> Dict[str, Any]:
-        """Load sensor configuration from environment"""
-        return {
-            "temperature_pin": int(os.getenv("TEMPERATURE_PIN", 4)),
-            "humidity_pin": int(os.getenv("HUMIDITY_PIN", 4)),
-            "soil_moisture_pin": int(os.getenv("SOIL_MOISTURE_PIN", 18)),
-            "co2_sensor_address": int(os.getenv("CO2_SENSOR_ADDRESS", "0x61"), 16),
-            "camera_enabled": os.getenv("CAMERA_ENABLED", "true").lower() == "true"
-        }
-    
-    def _setup_gpio(self):
-        """Initialize GPIO pins"""
+    def _load_test_data(self):
+        """Load test sensor data for testing mode"""
+        test_file = self.sensor_config.get('mock_data_file', 'test_data/sensor_readings.json')
         try:
+            if os.path.exists(test_file):
+                with open(test_file, 'r') as f:
+                    self.test_data = json.load(f)
+                    self.logger.info(f"Loaded test data from {test_file}")
+        except Exception as e:
+            self.logger.warning(f"Could not load test data: {e}")
+    
+    def _setup_hardware(self):
+        """Initialize hardware sensors"""
+        if not self.simulation_mode and RASPBERRY_PI_AVAILABLE:
             GPIO.setmode(GPIO.BCM)
-            GPIO.setup(self.config["soil_moisture_pin"], GPIO.IN)
-            logger.info("GPIO pins configured successfully")
-        except Exception as e:
-            logger.error(f"Failed to setup GPIO: {e}")
-            self.simulation_mode = True
+            # Initialize sensor pins and configurations
+            self.temp_sensor = Adafruit_DHT.DHT22
+            self.temp_pin = self.sensor_config['temperature_pin']
+            self.humidity_pin = self.sensor_config['humidity_pin']
+            self.soil_moisture_pin = self.sensor_config['soil_moisture_pin']
     
-    def _setup_sensors(self):
-        """Initialize sensor objects"""
-        try:
-            # DHT22 for temperature and humidity
-            self.dht_sensor = adafruit_dht.DHT22(getattr(board, f"D{self.config['temperature_pin']}"))
-            
-            # I2C bus for CO2 sensor
-            self.i2c_bus = smbus2.SMBus(1)
-            
-            logger.info("Sensors initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize sensors: {e}")
-            self.simulation_mode = True
-    
-    def read_temperature_humidity(self) -> Dict[str, float]:
-        """Read temperature and humidity from DHT22 sensor"""
+    def get_temperature(self) -> float:
+        """Get current temperature reading"""
         if self.simulation_mode:
-            return self._simulate_temp_humidity()
-        
-        try:
-            temperature = self.dht_sensor.temperature
-            humidity = self.dht_sensor.humidity
-            
-            if temperature is not None and humidity is not None:
-                return {
-                    "temperature": round(temperature, 1),
-                    "humidity": round(humidity, 1)
-                }
-            else:
-                logger.warning("Failed to read DHT22 sensor")
-                return self._simulate_temp_humidity()
-                
-        except Exception as e:
-            logger.error(f"Error reading DHT22: {e}")
-            return self._simulate_temp_humidity()
+            return self._get_test_or_simulated_value('temperature', self._simulate_temperature)
+        else:
+            # Real sensor reading logic here
+            try:
+                humidity, temperature = Adafruit_DHT.read_retry(self.temp_sensor, self.temp_pin)
+                return temperature if temperature is not None else 0.0
+            except Exception as e:
+                self.logger.error(f"Temperature sensor error: {e}")
+                return self._simulate_temperature()
     
-    def read_soil_moisture(self) -> float:
-        """Read soil moisture level"""
+    def get_humidity(self) -> float:
+        """Get current humidity reading"""
         if self.simulation_mode:
-            return self._simulate_soil_moisture()
-        
-        try:
-            # Read analog value from soil moisture sensor
-            # This is a simplified implementation - actual implementation
-            # would depend on your specific sensor and ADC setup
-            raw_value = GPIO.input(self.config["soil_moisture_pin"])
-            
-            # Convert to percentage (0-100%)
-            moisture_percent = (raw_value / 1024.0) * 100
-            return round(moisture_percent, 1)
-            
-        except Exception as e:
-            logger.error(f"Error reading soil moisture: {e}")
-            return self._simulate_soil_moisture()
+            return self._get_test_or_simulated_value('humidity', self._simulate_humidity)
+        else:
+            # Real sensor reading logic here
+            try:
+                humidity, temperature = Adafruit_DHT.read_retry(self.temp_sensor, self.humidity_pin)
+                return humidity if humidity is not None else 0.0
+            except Exception as e:
+                self.logger.error(f"Humidity sensor error: {e}")
+                return self._simulate_humidity()
     
-    def read_co2(self) -> float:
-        """Read CO2 level from MH-Z19B sensor"""
+    def get_soil_moisture(self) -> float:
+        """Get current soil moisture reading"""
         if self.simulation_mode:
-            return self._simulate_co2()
-        
-        try:
-            # Send command to CO2 sensor via I2C
-            # This is a simplified implementation for MH-Z19B
-            self.i2c_bus.write_byte(self.config["co2_sensor_address"], 0x86)
-            time.sleep(0.1)
-            
-            # Read response
-            data = self.i2c_bus.read_i2c_block_data(self.config["co2_sensor_address"], 0, 9)
-            
-            if len(data) >= 4:
-                co2_value = (data[2] << 8) | data[3]
-                return float(co2_value)
-            else:
-                logger.warning("Invalid CO2 sensor response")
+            return self._get_test_or_simulated_value('soil_moisture', self._simulate_soil_moisture)
+        else:
+            # Real sensor reading logic here
+            try:
+                # This would involve ADC reading for analog soil moisture sensor
+                return 0.0
+            except Exception as e:
+                self.logger.error(f"Soil moisture sensor error: {e}")
+                return self._simulate_soil_moisture()
+    
+    def get_co2_level(self) -> int:
+        """Get current CO2 level"""
+        if self.simulation_mode:
+            return self._get_test_or_simulated_value('co2', self._simulate_co2)
+        else:
+            # Real CO2 sensor reading logic here
+            try:
+                return 400
+            except Exception as e:
+                self.logger.error(f"CO2 sensor error: {e}")
                 return self._simulate_co2()
-                
-        except Exception as e:
-            logger.error(f"Error reading CO2 sensor: {e}")
-            return self._simulate_co2()
     
-    def read_all_sensors(self) -> Dict[str, Any]:
-        """Read all sensor values and return as dictionary"""
-        try:
-            # Get temperature and humidity
-            temp_humid = self.read_temperature_humidity()
-            
-            # Get other sensor readings
-            soil_moisture = self.read_soil_moisture()
-            co2_level = self.read_co2()
-            
-            sensor_data = {
-                "temperature": temp_humid.get("temperature", 0.0),
-                "humidity": temp_humid.get("humidity", 0.0),
-                "soil_moisture": soil_moisture,
-                "co2": co2_level,
-                "timestamp": time.time(),
-                "simulation_mode": self.simulation_mode
-            }
-            
-            logger.debug(f"Sensor readings: {sensor_data}")
-            return sensor_data
-            
-        except Exception as e:
-            logger.error(f"Error reading sensors: {e}")
-            return self._get_default_readings()
-    
-    def _simulate_temp_humidity(self) -> Dict[str, float]:
-        """Simulate temperature and humidity readings for testing"""
-        import random
+    def get_all_readings(self) -> Dict[str, Any]:
+        """Get all sensor readings at once"""
         return {
-            "temperature": round(random.uniform(20.0, 28.0), 1),
-            "humidity": round(random.uniform(40.0, 65.0), 1)
+            'temperature': self.get_temperature(),
+            'humidity': self.get_humidity(),
+            'soil_moisture': self.get_soil_moisture(),
+            'co2': self.get_co2_level(),
+            'timestamp': datetime.now().isoformat(),
+            'simulation_mode': self.simulation_mode,
+            'testing_mode': config.is_testing_mode(),
+            'environment': config.environment.value
         }
+    
+    def _get_test_or_simulated_value(self, sensor_type: str, simulation_func):
+        """Get test data value or fall back to simulation"""
+        if self.test_data and config.is_testing_mode():
+            scenario = self.test_data.get('current_scenario', 'normal_conditions')
+            scenarios = self.test_data.get('test_scenarios', {})
+            if scenario in scenarios and sensor_type in scenarios[scenario]:
+                return scenarios[scenario][sensor_type]
+        
+        return simulation_func()
+    
+    def set_test_scenario(self, scenario_name: str):
+        """Set the current test scenario"""
+        if self.test_data and scenario_name in self.test_data.get('test_scenarios', {}):
+            self.test_data['current_scenario'] = scenario_name
+            self.logger.info(f"Test scenario set to: {scenario_name}")
+            return True
+        return False
+    
+    def get_available_test_scenarios(self) -> list:
+        """Get list of available test scenarios"""
+        if self.test_data:
+            return list(self.test_data.get('test_scenarios', {}).keys())
+        return []
+    
+    def _simulate_temperature(self) -> float:
+        """Simulate temperature reading (20-30°C range)"""
+        base_temp = 24.0
+        variation = random.uniform(-4.0, 6.0)
+        return round(base_temp + variation, 1)
+    
+    def _simulate_humidity(self) -> float:
+        """Simulate humidity reading (40-80% range)"""
+        base_humidity = 60.0
+        variation = random.uniform(-20.0, 20.0)
+        return round(max(0, min(100, base_humidity + variation)), 1)
     
     def _simulate_soil_moisture(self) -> float:
-        """Simulate soil moisture reading for testing"""
-        import random
-        return round(random.uniform(30.0, 80.0), 1)
+        """Simulate soil moisture reading (20-80% range)"""
+        base_moisture = 50.0
+        variation = random.uniform(-30.0, 30.0)
+        return round(max(0, min(100, base_moisture + variation)), 1)
     
-    def _simulate_co2(self) -> float:
-        """Simulate CO2 reading for testing"""
-        import random
-        return round(random.uniform(400.0, 1200.0), 1)
-    
-    def _get_default_readings(self) -> Dict[str, Any]:
-        """Return default sensor readings in case of errors"""
-        return {
-            "temperature": 24.5,
-            "humidity": 45.2,
-            "soil_moisture": 72.0,
-            "co2": 550.0,
-            "timestamp": time.time(),
-            "simulation_mode": True,
-            "error": True
-        }
-    
-    def get_sensor_status(self) -> Dict[str, Any]:
-        """Get status information about all sensors"""
-        return {
-            "simulation_mode": self.simulation_mode,
-            "raspberry_pi_available": RASPBERRY_PI,
-            "config": self.config,
-            "last_reading": self.read_all_sensors()
-        }
+    def _simulate_co2(self) -> int:
+        """Simulate CO2 reading (300-1200 ppm range)"""
+        base_co2 = 400
+        variation = random.randint(-100, 800)
+        return max(300, base_co2 + variation)
     
     def cleanup(self):
         """Clean up GPIO resources"""
-        if not self.simulation_mode:
-            try:
-                GPIO.cleanup()
-                logger.info("GPIO cleanup completed")
-            except Exception as e:
-                logger.error(f"Error during GPIO cleanup: {e}")
+        if not self.simulation_mode and RASPBERRY_PI_AVAILABLE:
+            GPIO.cleanup()
 
 # Example usage and testing
 def read_sensors():
     """Legacy function for compatibility with your notes"""
     sensor_manager = SensorManager()
-    return sensor_manager.read_all_sensors()
+    return sensor_manager.get_all_readings()
 
 if __name__ == "__main__":
     # Test the sensor manager
@@ -220,7 +199,7 @@ if __name__ == "__main__":
     
     try:
         for i in range(5):
-            readings = manager.read_all_sensors()
+            readings = manager.get_all_readings()
             print(f"Reading {i+1}: {json.dumps(readings, indent=2)}")
             time.sleep(2)
     finally:

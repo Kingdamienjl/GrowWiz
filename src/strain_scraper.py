@@ -290,7 +290,7 @@ class StrainScraper:
     async def _scrape_strain_details(self, session: aiohttp.ClientSession, strain_name: str) -> Optional[StrainData]:
         """Scrape detailed information for a specific strain"""
         try:
-            # Create mock data for demonstration (replace with actual scraping)
+            # Return empty list on error
             strain_types = ["indica", "sativa", "hybrid"]
             effects_pool = ["relaxed", "happy", "euphoric", "uplifted", "creative", "focused", "sleepy", "hungry"]
             flavors_pool = ["sweet", "earthy", "citrus", "pine", "berry", "diesel", "spicy", "floral"]

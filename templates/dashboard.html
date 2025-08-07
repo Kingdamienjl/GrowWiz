@@ -46,6 +46,34 @@
             color: #28a745;
         }
 
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            color: #a0aec0;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .nav-link.active {
+            color: #28a745;
+            background: rgba(40, 167, 69, 0.15);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
         .status-indicator {
             display: flex;
             align-items: center;
@@ -387,6 +415,19 @@
             background: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: transform 0.2s ease;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .strain-description {
+            flex-grow: 1;
+            margin: 10px 0;
+            line-height: 1.4;
+            color: #555;
+            font-size: 0.9em;
+            max-height: 120px;
+            overflow-y: auto;
         }
 
         .strain-card:hover {
@@ -491,6 +532,24 @@
                 <i class="fas fa-seedling"></i>
                 GrowWiz
             </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link active">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+                <a href="/strain-identification" class="nav-link">
+                    <i class="fas fa-search"></i>
+                    Strain ID
+                </a>
+                <a href="/grow-calendar" class="nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    Grow Calendar
+                </a>
+                <a href="/comprehensive" class="nav-link">
+                    <i class="fas fa-tools"></i>
+                    GrowTools
+                </a>
+            </nav>
             <div class="status-indicator">
                 <div class="status-dot"></div>
                 <span id="system-status">System Online</span>
@@ -505,6 +564,9 @@
                 <div class="card-header">
                     <i class="fas fa-thermometer-half"></i>
                     Environmental Sensors
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="environment-badge" class="automation-status status-active">SIMULATION</span>
+                    </div>
                 </div>
                 <div class="sensor-grid" id="sensor-data">
                     <div class="sensor-item">
@@ -523,6 +585,16 @@
                         <div class="sensor-value" id="co2">-- ppm</div>
                         <div class="sensor-label">CO₂ Level</div>
                     </div>
+                </div>
+                <div id="test-controls" style="margin-top: 1rem; display: none;">
+                    <label for="test-scenario" style="display: block; margin-bottom: 0.5rem; color: #a0aec0;">Test Scenario:</label>
+                    <select id="test-scenario" class="search-box" style="margin-bottom: 0.5rem;">
+                        <option value="">Select scenario...</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="applyTestScenario()" style="width: 100%;">
+                        <i class="fas fa-flask"></i>
+                        Apply Scenario
+                    </button>
                 </div>
             </div>
 
@@ -648,7 +720,7 @@
                 <i class="fas fa-lightbulb"></i>
                 Growing Tips Database
             </div>
-            <input type="text" class="search-box" id="tips-search" placeholder="Search growing tips...">
+            <input type="text" class="search-box" id="tips-search" placeholder="Search tips and guides...">
             <div class="tips-container" id="tips-container">
                 <!-- Tips will be loaded here -->
             </div>
@@ -836,7 +908,7 @@
                 params.append('type', strainType);
             }
 
-            fetch('/api/strains/list?' + params)
+            fetch('/api/strains?' + params)
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
@@ -853,6 +925,9 @@
                         // Update strain count in header
                         const header = document.querySelector('#strainList h4');
                         header.textContent = `Scraped Strains (${data.total} Available)`;
+                        
+                        // Enable organize to drive button when strains are loaded
+                        document.getElementById('organizeBtn').disabled = false;
                     }
                 })
                 .catch(error => {
@@ -879,7 +954,7 @@
                     <span class="strain-type ${strain.strain_type.toLowerCase()}">${strain.strain_type}</span>
                     <p><strong>THC:</strong> ${strain.thc_content || 'N/A'}</p>
                     <p><strong>CBD:</strong> ${strain.cbd_content || 'N/A'}</p>
-                    <p class="strain-description">${strain.description ? strain.description.substring(0, 100) + '...' : 'No description available'}</p>
+                    <p class="strain-description">${strain.description || 'No description available'}</p>
                     <div class="strain-effects">
                         <strong>Effects:</strong><br>
                         ${effectTags}
@@ -974,6 +1049,33 @@
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 
+                // Update environment badge
+                const environmentBadge = document.getElementById('environment-badge');
+                const testControls = document.getElementById('test-controls');
+                
+                if (data.testing_mode) {
+                    environmentBadge.textContent = 'TESTING';
+                    environmentBadge.className = 'automation-status status-active';
+                    testControls.style.display = 'block';
+                    
+                    // Populate test scenarios
+                    const scenarioSelect = document.getElementById('test-scenario');
+                    if (data.test_scenarios && data.test_scenarios.length > 0) {
+                        scenarioSelect.innerHTML = '<option value="">Select scenario...</option>' +
+                            data.test_scenarios.map(scenario => 
+                                `<option value="${scenario}">${scenario.replace('_', ' ').toUpperCase()}</option>`
+                            ).join('');
+                    }
+                } else if (data.simulation_mode) {
+                    environmentBadge.textContent = 'SIMULATION';
+                    environmentBadge.className = 'automation-status status-inactive';
+                    testControls.style.display = 'none';
+                } else {
+                    environmentBadge.textContent = 'LIVE';
+                    environmentBadge.className = 'automation-status status-active';
+                    testControls.style.display = 'none';
+                }
+                
                 if (data.sensors) {
                     document.getElementById('temperature').textContent = `${data.sensors.temperature}°C`;
                     document.getElementById('humidity').textContent = `${data.sensors.humidity}%`;
@@ -989,6 +1091,35 @@
             } catch (error) {
                 console.error('Error updating status:', error);
                 document.getElementById('system-status').textContent = 'Connection Error';
+            }
+        }
+
+        async function applyTestScenario() {
+            const scenario = document.getElementById('test-scenario').value;
+            
+            if (!scenario) {
+                showAlert('Please select a test scenario', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/test/scenario', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenario: scenario })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`Test scenario "${scenario}" applied successfully!`, 'success');
+                    // Force immediate status update
+                    setTimeout(updateSystemStatus, 500);
+                } else {
+                    showAlert(data.error || 'Failed to apply test scenario', 'error');
+                }
+            } catch (error) {
+                showAlert('Error applying test scenario: ' + error.message, 'error');
             }
         }
 

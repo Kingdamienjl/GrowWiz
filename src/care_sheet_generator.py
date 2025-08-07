@@ -4,6 +4,7 @@ Generates detailed, individualized growing guides based on strain characteristic
 """
 
 import json
+import re
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -276,7 +277,6 @@ class AdvancedCareSheetGenerator:
         flowering_time = strain_data.get('flowering_time', '8-10 weeks')
         
         # Extract numeric weeks from flowering time
-        import re
         weeks_match = re.search(r'(\d+)', flowering_time)
         flowering_weeks = int(weeks_match.group(1)) if weeks_match else 8
         

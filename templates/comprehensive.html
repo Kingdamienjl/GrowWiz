@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrowWiz - GrowTools</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .page-title h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-title p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .tool-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tool-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .tool-icon.scraping { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .tool-icon.database { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .tool-icon.automation { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .tool-icon.analysis { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .tool-icon.guides { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .tool-icon.pricing { background: linear-gradient(135deg, #a8edea, #fed6e3); }
+
+        .tool-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .tool-description {
+            color: #718096;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .tool-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .form-control {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-display {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .value {
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tips-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .tip-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+
+        .tip-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #ebf8ff;
+        }
+
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-group {
+                flex-direction: column;
+            }
+            
+            .form-control {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-seedling"></i>
+                GrowWiz
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="/"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li><a href="/strain-identification"><i class="fas fa-search"></i> Strain ID</a></li>
+                    <li><a href="/grow-calendar"><i class="fas fa-calendar"></i> Calendar</a></li>
+                    <li><a href="/comprehensive" class="active"><i class="fas fa-tools"></i> GrowTools</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-title">
+            <h1><i class="fas fa-tools"></i> GrowTools</h1>
+            <p>Advanced cultivation tools, guides, and automation features</p>
+        </div>
+
+        <div class="tools-grid">
+            <!-- Hyperbrowser Scraping -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon scraping">
+                        <i class="fas fa-spider"></i>
+                    </div>
+                    <div class="tool-title">Hyperbrowser Scraping</div>
+                </div>
+                <div class="tool-description">
+                    Advanced web scraping with AI-powered browser automation for comprehensive data collection from multiple cannabis sources.
+                </div>
+                <div class="tool-controls">
+                    <div class="control-group">
+                        <button class="btn btn-primary" onclick="startHyperbrowserScraping()">
+                            <i class="fas fa-play"></i> Start Scraping
+                        </button>
+                        <button class="btn btn-info" onclick="testHyperbrowser()">
+                            <i class="fas fa-vial"></i> Test Connection
+                        </button>
+                    </div>
+                    <div class="status-display">
+                        <div class="status-item">
+                            <span class="label">Status:</span>
+                            <span class="value" id="hyperbrowserStatus">Ready</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Sources:</span>
+                            <span class="value">15+ Cannabis Databases</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Strain Database -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon database">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="tool-title">Enhanced Strain Database</div>
+                </div>
+                <div class="tool-description">
+                    Comprehensive strain scraping with detailed genetics, effects, growing information, and automated Google Drive organization.
+                </div>
+                <div class="tool-controls">
+                    <div class="control-group">
+                        <select id="strainCount" class="form-control">
+                            <option value="100">100 strains (Quick)</option>
+                            <option value="500">500 strains (Standard)</option>
+                            <option value="1000" selected>1000 strains (Comprehensive)</option>
+                            <option value="1500">1500 strains (Maximum)</option>
+                        </select>
+                        <select id="scrapingMode" class="form-control">
+                            <option value="enhanced" selected>Enhanced (15+ sources)</option>
+                            <option value="standard">Standard (Basic sources)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <button class="btn btn-primary" onclick="startStrainScraping()">
+                            <i class="fas fa-play"></i> Start Enhanced Scraping
+                        </button>
+                        <button class="btn btn-success" onclick="organizeToGDrive()" id="organizeBtn">
+                            <i class="fab fa-google-drive"></i> Organize to Google Drive
+                        </button>
+                    </div>
+                    <div class="status-display">
+                        <div class="status-item">
+                            <span class="label">Scraping Status:</span>
+                            <span class="value" id="scrapingStatus">Idle</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Scraped Strains:</span>
+                            <span class="value" id="scrapedCount">635</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Google Drive:</span>
+                            <span class="value" id="gdriveStatus">Ready</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="scrapingProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plant Problem Diagnosis -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon analysis">
+                        <i class="fas fa-microscope"></i>
+                    </div>
+                    <div class="tool-title">Plant Problem Diagnosis</div>
+                </div>
+                <div class="tool-description">
+                    AI-powered plant health analysis. Upload images to identify diseases, nutrient deficiencies, and pest problems.
+                </div>
+                <div class="tool-controls">
+                    <div class="upload-area" onclick="document.getElementById('diagnosisImage').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #cbd5e0; margin-bottom: 1rem;"></i>
+                        <p>Click or drag images here for diagnosis</p>
+                        <input type="file" id="diagnosisImage" accept="image/*" style="display: none;" onchange="diagnosePlant(this)">
+                    </div>
+                    <div class="control-group">
+                        <button class="btn btn-info" onclick="viewDiagnosisHistory()">
+                            <i class="fas fa-history"></i> View History
+                        </button>
+                        <button class="btn btn-warning" onclick="exportDiagnosisReport()">
+                            <i class="fas fa-file-export"></i> Export Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Automation Triggers -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon automation">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="tool-title">Automation Triggers</div>
+                </div>
+                <div class="tool-description">
+                    Set up automated responses to environmental conditions, watering schedules, and growth stage transitions.
+                </div>
+                <div class="tool-controls">
+                    <div class="control-group">
+                        <button class="btn btn-primary" onclick="createAutomationRule()">
+                            <i class="fas fa-plus"></i> Create Rule
+                        </button>
+                        <button class="btn btn-info" onclick="viewActiveRules()">
+                            <i class="fas fa-list"></i> View Rules
+                        </button>
+                    </div>
+                    <div class="status-display">
+                        <div class="status-item">
+                            <span class="label">Active Rules:</span>
+                            <span class="value" id="activeRules">3</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Last Action:</span>
+                            <span class="value">Adjusted humidity - 2 min ago</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Next Check:</span>
+                            <span class="value">30 seconds</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comprehensive Grow Setup Guide -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon guides">
+                        <i class="fas fa-hammer"></i>
+                    </div>
+                    <div class="tool-title">Comprehensive Grow Setup Guide</div>
+                </div>
+                <div class="tool-description">
+                    Complete setup guides with product recommendations for every budget and growing space configuration.
+                </div>
+                <div class="tool-controls">
+                    <div class="control-group">
+                        <select id="budgetLevel" class="form-control">
+                            <option value="budget">Budget Setup ($200-500)</option>
+                            <option value="mid">Mid-Range Setup ($500-1500)</option>
+                            <option value="premium">Premium Setup ($1500-3000)</option>
+                            <option value="professional">Professional Setup ($3000+)</option>
+                        </select>
+                        <select id="spaceSize" class="form-control">
+                            <option value="small">Small (2x2 or 2x4 tent)</option>
+                            <option value="medium">Medium (4x4 tent)</option>
+                            <option value="large">Large (4x8 or 5x5 tent)</option>
+                            <option value="room">Dedicated Room</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <button class="btn btn-primary" onclick="generateSetupGuide()">
+                            <i class="fas fa-tools"></i> Generate Setup Guide
+                        </button>
+                        <button class="btn btn-success" onclick="exportSetupGuide()">
+                            <i class="fas fa-download"></i> Export Guide
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Growing Tips Database -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon guides">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="tool-title">Growing Tips & Guides</div>
+                </div>
+                <div class="tool-description">
+                    Comprehensive growing guides, expert tips, and strain-specific cultivation advice from top cannabis sources.
+                </div>
+                <div class="tool-controls">
+                    <input type="text" class="search-box" id="tips-search" placeholder="Search guides and techniques..." onkeypress="if(event.key==='Enter') searchGrowingTips()">
+                    <div class="tips-container" id="tips-container">
+                        <div class="tip-item">
+                            <strong>pH Management:</strong> Maintain soil pH between 6.0-7.0 for optimal nutrient uptake
+                        </div>
+                        <div class="tip-item">
+                            <strong>Light Cycles:</strong> 18/6 for vegetative, 12/12 for flowering stage
+                        </div>
+                        <div class="tip-item">
+                            <strong>Humidity Control:</strong> 60-70% during veg, 40-50% during flower
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <button class="btn btn-primary" onclick="refreshTips()">
+                            <i class="fas fa-sync"></i> Refresh Tips
+                        </button>
+                        <button class="btn btn-success" onclick="exportTipsGuide()">
+                            <i class="fas fa-download"></i> Export Guide
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price Links & Market Data -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon pricing">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="tool-title">Price Links & Market Data</div>
+                </div>
+                <div class="tool-description">
+                    Real-time pricing information, seed bank links, and market trends for cannabis strains and growing supplies.
+                </div>
+                <div class="tool-controls">
+                    <div class="control-group">
+                        <input type="text" class="form-control" placeholder="Search products..." id="priceSearch">
+                        <button class="btn btn-primary" onclick="searchPrices()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    <div class="control-group">
+                        <button class="btn btn-info" onclick="viewSeedBanks()">
+                            <i class="fas fa-store"></i> Seed Banks
+                        </button>
+                        <button class="btn btn-success" onclick="viewMarketTrends()">
+                            <i class="fas fa-chart-line"></i> Market Trends
+                        </button>
+                        <button class="btn btn-warning" onclick="priceAlerts()">
+                            <i class="fas fa-bell"></i> Price Alerts
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Care Sheet Generator -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon guides">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="tool-title">Care Sheet Generator</div>
+                </div>
+                <div class="tool-description">
+                    Generate personalized care sheets and quick reference cards for specific strains and growing setups.
+                </div>
+                <div class="tool-controls">
+                    <div class="control-group">
+                        <input type="text" class="form-control" id="strainSearchInput" placeholder="Search database..." onkeyup="filterStrains()">
+                        <select class="form-control" id="careSheetStrain" size="5" style="height: auto;">
+                            <option value="">Select strain...</option>
+                            <!-- Strains will be loaded dynamically -->
+                        </select>
+                        <select class="form-control" id="growingMethod">
+                            <option value="soil">Soil</option>
+                            <option value="hydro">Hydroponic</option>
+                            <option value="coco">Coco Coir</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <button class="btn btn-primary" onclick="generateCareSheet()">
+                            <i class="fas fa-file-alt"></i> Generate Care Sheet
+                        </button>
+                        <button class="btn btn-success" onclick="generateQuickRef()">
+                            <i class="fas fa-bookmark"></i> Quick Reference
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Management -->
+            <div class="tool-card">
+                <div class="tool-header">
+                    <div class="tool-icon automation">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="tool-title">System Management</div>
+                </div>
+                <div class="tool-description">
+                    Database management, backup/restore, system diagnostics, and configuration tools.
+                </div>
+                <div class="tool-controls">
+                    <div class="control-group">
+                        <button class="btn btn-info" onclick="runDiagnostics()">
+                            <i class="fas fa-stethoscope"></i> Run Diagnostics
+                        </button>
+                        <button class="btn btn-success" onclick="backupData()">
+                            <i class="fas fa-save"></i> Backup Data
+                        </button>
+                    </div>
+                    <div class="control-group">
+                        <button class="btn btn-warning" onclick="optimizeDatabase()">
+                            <i class="fas fa-database"></i> Optimize DB
+                        </button>
+                        <button class="btn btn-primary" onclick="systemSettings()">
+                            <i class="fas fa-sliders-h"></i> Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Hyperbrowser functions
+        function startHyperbrowserScraping() {
+            showNotification('Starting Hyperbrowser scraping...', 'success');
+            document.getElementById('hyperbrowserStatus').textContent = 'Running...';
+            // Add actual implementation
+        }
+
+        function testHyperbrowser() {
+            showNotification('Testing Hyperbrowser connection...', 'success');
+            // Add actual implementation
+        }
+
+        // Strain scraping functions
+        function startStrainScraping() {
+            const count = document.getElementById('strainCount').value;
+            const mode = document.getElementById('scrapingMode').value;
+            
+            fetch('/api/scrape-strains', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ count: parseInt(count), mode: mode, enhanced: true })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`Started enhanced scraping for ${count} strains!`, 'success');
+                    document.getElementById('scrapingStatus').textContent = 'Running...';
+                    startStrainStatusUpdates();
+                } else {
+                    showNotification('Error starting scraping: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error starting scraping', 'error');
+            });
+        }
+
+        function organizeToGDrive() {
+            fetch('/api/strains/organize-gdrive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    showNotification('Started organizing strains to Google Drive!', 'success');
+                    document.getElementById('gdriveStatus').textContent = 'Starting...';
+                    startStrainStatusUpdates();
+                } else {
+                    showNotification('Error: ' + (data.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error organizing to Google Drive', 'error');
+            });
+        }
+
+        function startStrainStatusUpdates() {
+            const interval = setInterval(() => {
+                fetch('/api/scraping-status')
+                .then(response => response.json())
+                .then(data => {
+                    // Update scraping status
+                    if (data.active) {
+                        document.getElementById('scrapingStatus').textContent = 'Running...';
+                        document.getElementById('scrapingProgress').style.width = data.progress + '%';
+                    } else if (data.results) {
+                        document.getElementById('scrapingStatus').textContent = 'Completed';
+                        document.getElementById('scrapedCount').textContent = data.results.scraped_count;
+                        document.getElementById('scrapingProgress').style.width = '100%';
+                        clearInterval(interval);
+                        showNotification('Strain scraping completed!', 'success');
+                    } else if (data.error) {
+                        document.getElementById('scrapingStatus').textContent = 'Error: ' + data.error;
+                        clearInterval(interval);
+                    }
+
+                    // Update Google Drive status
+                    if (data.gdrive_active) {
+                        document.getElementById('gdriveStatus').textContent = 'Organizing...';
+                    } else if (data.gdrive_results) {
+                        document.getElementById('gdriveStatus').textContent = 'Completed';
+                        showNotification('Strains organized to Google Drive!', 'success');
+                    } else if (data.gdrive_error) {
+                        document.getElementById('gdriveStatus').textContent = 'Error: ' + data.gdrive_error;
+                    }
+                })
+                .catch(error => console.error('Error updating status:', error));
+            }, 2000);
+        }
+
+        // Plant diagnosis functions
+        function diagnosePlant(input) {
+            if (input.files && input.files[0]) {
+                showNotification('Analyzing plant image...', 'success');
+                // Add actual implementation
+            }
+        }
+
+        function viewDiagnosisHistory() {
+            showNotification('Loading diagnosis history...', 'success');
+            // Add actual implementation
+        }
+
+        function exportDiagnosisReport() {
+            showNotification('Exporting diagnosis report...', 'success');
+            // Add actual implementation
+        }
+
+        // Automation functions
+        function createAutomationRule() {
+            showNotification('Opening automation rule creator...', 'success');
+            // Add actual implementation
+        }
+
+        function viewActiveRules() {
+            showNotification('Loading active automation rules...', 'success');
+            // Add actual implementation
+        }
+
+        // Setup guide functions
+        function generateSetupGuide() {
+            const budget = document.getElementById('budgetLevel').value;
+            const space = document.getElementById('spaceSize').value;
+            
+            showNotification(`Generating ${budget} setup guide for ${space} space`, 'success');
+            
+            // Call the setup guide API
+            fetch('/api/setup-guide/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ budget: budget, space: space })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.setup_guide) {
+                    // Display the setup guide in a new window
+                    const setupWindow = window.open('', '_blank');
+                    setupWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Grow Setup Guide - ${budget} ${space}</title>
+                                <style>
+                                    body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+                                    .product-link { color: #007bff; text-decoration: none; }
+                                    .product-link:hover { text-decoration: underline; }
+                                    .price { font-weight: bold; color: #28a745; }
+                                    .section { margin: 20px 0; padding: 15px; border-left: 4px solid #007bff; background: #f8f9fa; }
+                                </style>
+                            </head>
+                            <body>
+                                <div style="white-space: pre-wrap;">${data.setup_guide}</div>
+                            </body>
+                        </html>
+                    `);
+                    showNotification('Setup guide generated successfully!', 'success');
+                } else {
+                    showNotification('Error: ' + (data.error || 'Failed to generate setup guide'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error generating setup guide', 'error');
+            });
+        }
+
+        function exportSetupGuide() {
+            const budget = document.getElementById('budgetLevel').value;
+            const space = document.getElementById('spaceSize').value;
+            
+            showNotification('Exporting setup guide...', 'info');
+            
+            // Generate and download the setup guide
+            fetch('/api/setup-guide/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ budget: budget, space: space })
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `grow-setup-guide-${budget}-${space}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                showNotification('Setup guide exported successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error exporting setup guide', 'error');
+            });
+        }
+
+        // Tips functions (updated to query scraped database)
+        function refreshTips() {
+            showNotification('Refreshing growing tips...', 'success');
+            
+            // Call the growing tips API that queries scraped database
+            fetch('/api/growing-tips/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.tips && data.tips.length > 0) {
+                    // Update the tips container
+                    const container = document.getElementById('tips-container');
+                    container.innerHTML = data.tips.map(tip => 
+                        `<div class="tip-item">${tip}</div>`
+                    ).join('');
+                    showNotification(`Loaded ${data.tips.length} growing tips!`, 'success');
+                } else {
+                    showNotification('No growing tips found', 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error refreshing growing tips', 'error');
+            });
+        }
+
+        function exportTipsGuide() {
+            showNotification('Exporting growing guide...', 'success');
+            
+            // Export comprehensive growing guide from scraped database
+            fetch('/api/growing-tips/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'comprehensive-growing-guide.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                showNotification('Growing guide exported successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error exporting growing guide', 'error');
+            });
+        }
+
+        function searchGrowingTips() {
+            const query = document.getElementById('tips-search').value;
+            if (query) {
+                showNotification(`Searching growing tips for: ${query}`, 'success');
+                
+                // Call the growing tips API that queries scraped database
+                fetch('/api/growing-tips/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.tips && data.tips.length > 0) {
+                        // Update the tips container with search results
+                        const container = document.getElementById('tips-container');
+                        container.innerHTML = data.tips.map(tip => 
+                            `<div class="tip-item">${tip}</div>`
+                        ).join('');
+                        showNotification(`Found ${data.tips.length} growing tips!`, 'success');
+                    } else {
+                        showNotification('No growing tips found for this query', 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error searching growing tips', 'error');
+                });
+            } else {
+                showNotification('Please enter a search query', 'error');
+            }
+        }
+
+        // Price functions
+        function searchPrices() {
+            const query = document.getElementById('priceSearch').value;
+            if (query) {
+                showNotification(`Searching prices for: ${query}`, 'success');
+                // Add actual implementation
+            }
+        }
+
+        function viewSeedBanks() {
+            showNotification('Loading seed bank directory...', 'success');
+            // Add actual implementation
+        }
+
+        function viewMarketTrends() {
+            showNotification('Loading market trends...', 'success');
+            // Add actual implementation
+        }
+
+        function priceAlerts() {
+            showNotification('Opening price alerts...', 'success');
+            // Add actual implementation
+        }
+
+        // Care sheet functions
+        function generateCareSheet() {
+            const strain = document.getElementById('careSheetStrain').value;
+            const method = document.getElementById('growingMethod').value;
+            if (strain && method) {
+                showNotification(`Generating care sheet for ${strain} (${method})`, 'success');
+                
+                // Call the care sheet API
+                fetch('/api/care-sheet/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ strain: strain, method: method })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.care_sheet) {
+                        // Display the care sheet in a modal or new window
+                        const careSheetWindow = window.open('', '_blank');
+                        careSheetWindow.document.write(`
+                            <html>
+                                <head><title>Care Sheet - ${strain}</title></head>
+                                <body style="font-family: Arial, sans-serif; padding: 20px;">
+                                    <pre style="white-space: pre-wrap;">${data.care_sheet}</pre>
+                                </body>
+                            </html>
+                        `);
+                        showNotification('Care sheet generated successfully!', 'success');
+                    } else {
+                        showNotification('Error: ' + (data.error || 'Failed to generate care sheet'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error generating care sheet', 'error');
+                });
+            } else {
+                showNotification('Please select strain and growing method', 'error');
+            }
+        }
+
+        function generateQuickRef() {
+            const strain = document.getElementById('careSheetStrain').value;
+            if (strain) {
+                showNotification(`Generating quick reference for ${strain}`, 'success');
+                
+                // Call the quick reference API
+                fetch('/api/care-sheet/quick-ref', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ strain: strain })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.quick_ref) {
+                        // Display the quick reference
+                        const quickRefWindow = window.open('', '_blank');
+                        quickRefWindow.document.write(`
+                            <html>
+                                <head><title>Quick Reference - ${strain}</title></head>
+                                <body style="font-family: Arial, sans-serif; padding: 20px;">
+                                    <pre style="white-space: pre-wrap;">${data.quick_ref}</pre>
+                                </body>
+                            </html>
+                        `);
+                        showNotification('Quick reference generated successfully!', 'success');
+                    } else {
+                        showNotification('Error: ' + (data.error || 'Failed to generate quick reference'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error generating quick reference', 'error');
+                });
+            } else {
+                showNotification('Please select a strain', 'error');
+            }
+        }
+
+        // System functions
+        function runDiagnostics() {
+            showNotification('Running system diagnostics...', 'success');
+            // Add actual implementation
+        }
+
+        function backupData() {
+            showNotification('Creating data backup...', 'success');
+            // Add actual implementation
+        }
+
+        function optimizeDatabase() {
+            showNotification('Optimizing database...', 'success');
+            // Add actual implementation
+        }
+
+        function systemSettings() {
+            showNotification('Opening system settings...', 'success');
+            // Add actual implementation
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load current strain count
+            fetch('/api/strains')
+            .then(response => response.json())
+            .then(data => {
+                if (data.total) {
+                    document.getElementById('scrapedCount').textContent = data.total;
+                }
+            })
+            .catch(error => console.error('Error loading strain count:', error));
+            
+            // Load strain list for care sheet dropdown
+            loadStrainList();
+        });
+        
+        function loadStrainList() {
+            fetch('/api/strains/list')
+            .then(response => response.json())
+            .then(data => {
+                if (data.strains && data.strains.length > 0) {
+                    const select = document.getElementById('careSheetStrain');
+                    
+                    // Store all strains globally for filtering
+                    window.allStrains = data.strains;
+                    
+                    // Clear existing options except the first one
+                    while (select.children.length > 1) {
+                        select.removeChild(select.lastChild);
+                    }
+                    
+                    // Add all strain options
+                    data.strains.forEach(strain => {
+                        const option = document.createElement('option');
+                        option.value = strain;
+                        option.textContent = strain;
+                        select.appendChild(option);
+                    });
+                    
+                    console.log(`Loaded ${data.strains.length} strains for care sheet generator`);
+                } else {
+                    console.warn('No strains found for care sheet generator');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading strain list:', error);
+                showNotification('Error loading strain list', 'error');
+            });
+        }
+        
+        function filterStrains() {
+            const searchInput = document.getElementById('strainSearchInput');
+            const select = document.getElementById('careSheetStrain');
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            if (!window.allStrains) return;
+            
+            // Clear existing options except the first one
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            // Filter and add matching strains
+            const filteredStrains = window.allStrains.filter(strain => 
+                strain.toLowerCase().includes(searchTerm)
+            );
+            
+            filteredStrains.forEach(strain => {
+                const option = document.createElement('option');
+                option.value = strain;
+                option.textContent = strain;
+                select.appendChild(option);
+            });
+            
+            // Show count of filtered results
+            if (searchTerm && filteredStrains.length > 0) {
+                console.log(`Found ${filteredStrains.length} strains matching "${searchTerm}"`);
+            }
+        }
+    </script>
+</body>
+</html>

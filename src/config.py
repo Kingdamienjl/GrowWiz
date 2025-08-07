@@ -310,15 +310,36 @@ class Config:
         
         return issues
     
-    def get_hardware_config(self) -> Dict[str, Any]:
-        """Get hardware-specific configuration"""
+    def get_sensor_config(self) -> Dict[str, Any]:
+        """Get sensor-specific configuration"""
         return {
-            'platform': self.get('hardware.platform'),
-            'simulation_mode': self.get('hardware.simulation_mode'),
-            'sensors': self.get_section('sensors'),
-            'relays': self.get_section('relays'),
-            'thresholds': self.get_section('thresholds')
+            'pins': self.get_section('sensors'),
+            'thresholds': self.get_section('thresholds'),
+            'reading_interval': self.get('sensors.reading_interval', 60),
+            'max_retries': self.get('sensors.max_retries', 3),
+            'retry_delay': self.get('sensors.retry_delay', 1.0),
+            'simulation_mode': self.get('hardware.simulation_mode', True)
         }
+    
+    @property
+    def environment(self):
+        """Get current environment"""
+        env_value = self.get('environment', 'development')
+        if hasattr(self, '_environment_enum'):
+            return self._environment_enum(env_value)
+        return env_value
+    
+    def is_testing_mode(self) -> bool:
+        """Check if running in testing mode"""
+        return self.get('environment', 'DEVELOPMENT').upper() == 'TESTING'
+    
+    def is_production_mode(self) -> bool:
+        """Check if running in production mode"""
+        return self.get('environment', 'DEVELOPMENT').upper() == 'PRODUCTION'
+    
+    def is_simulation_mode(self) -> bool:
+        """Check if running in simulation mode"""
+        return self.get('hardware.simulation_mode', True) or self.get('force_simulation', False)
     
     def get_ai_config(self) -> Dict[str, Any]:
         """Get AI-specific configuration"""
@@ -326,7 +347,13 @@ class Config:
     
     def get_scraping_config(self) -> Dict[str, Any]:
         """Get scraping-specific configuration"""
-        return self.get_section('scraping')
+        return {
+            "max_concurrent": int(os.getenv("MAX_CONCURRENT_SCRAPES", "5")),
+            "request_delay": float(os.getenv("REQUEST_DELAY", "1.0")),
+            "timeout": int(os.getenv("SCRAPE_TIMEOUT", "30")),
+            "user_agent": os.getenv("USER_AGENT", "GrowWiz/1.0 (+https://growwiz.ai)"),
+            "respect_robots": os.getenv("RESPECT_ROBOTS", "true").lower() == "true"
+        }
     
     def get_database_config(self) -> Dict[str, Any]:
         """Get database-specific configuration"""

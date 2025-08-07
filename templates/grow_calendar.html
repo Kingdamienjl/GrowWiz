@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow Calendar - GrowWiz</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .grow-controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .grow-controls h3 {
+            color: #2c5530;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .phase-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .phase-germination { background: #E3F2FD; color: #1976D2; }
+        .phase-seedling { background: #E8F5E8; color: #2E7D32; }
+        .phase-vegetative { background: #F3E5F5; color: #7B1FA2; }
+        .phase-flowering { background: #FFF3E0; color: #F57C00; }
+        .phase-harvest { background: #FFEBEE; color: #C62828; }
+
+        .grow-event {
+            background: #4CAF50;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-bottom: 0.2rem;
+            display: block;
+        }
+
+        .event-water { background: #2196F3; }
+        .event-feed { background: #FF9800; }
+        .event-prune { background: #9C27B0; }
+        .event-harvest { background: #F44336; }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .calendar-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            color: #2c5530;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .interactive-plant {
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 200px;
+        }
+
+        .plant-container {
+            position: relative;
+            height: 150px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .plant-stem {
+            width: 8px;
+            background: linear-gradient(to top, #8B4513, #228B22);
+            border-radius: 4px;
+            transition: height 0.5s ease;
+            position: relative;
+        }
+
+        .plant-leaves {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .leaf {
+            width: 20px;
+            height: 15px;
+            background: #228B22;
+            border-radius: 50% 0;
+            position: absolute;
+            transform-origin: bottom center;
+            transition: all 0.3s ease;
+        }
+
+        .leaf:nth-child(1) { transform: translateX(-50%) rotate(-45deg) translateY(-10px); }
+        .leaf:nth-child(2) { transform: translateX(-50%) rotate(45deg) translateY(-10px); }
+        .leaf:nth-child(3) { transform: translateX(-50%) rotate(-30deg) translateY(-25px); }
+        .leaf:nth-child(4) { transform: translateX(-50%) rotate(30deg) translateY(-25px); }
+        .leaf:nth-child(5) { transform: translateX(-50%) rotate(-60deg) translateY(-40px); }
+        .leaf:nth-child(6) { transform: translateX(-50%) rotate(60deg) translateY(-40px); }
+
+        .plant-buds {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .bud {
+            width: 12px;
+            height: 12px;
+            background: #FF6B35;
+            border-radius: 50%;
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .bud:nth-child(1) { left: -15px; top: 0; }
+        .bud:nth-child(2) { left: 15px; top: 0; }
+        .bud:nth-child(3) { left: -10px; top: -15px; }
+        .bud:nth-child(4) { left: 10px; top: -15px; }
+
+        .plant-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #2c5530;
+        }
+
+        .growth-stage {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 0.5rem;
+        }
+
+        .plant-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #2c5530;
+        }
+
+        /* Plant growth stages */
+        .stage-germination .plant-stem { height: 20px; }
+        .stage-germination .leaf { opacity: 0; }
+
+        .stage-seedling .plant-stem { height: 40px; }
+        .stage-seedling .leaf:nth-child(1),
+        .stage-seedling .leaf:nth-child(2) { opacity: 1; }
+
+        .stage-vegetative .plant-stem { height: 80px; }
+        .stage-vegetative .leaf { opacity: 1; }
+
+        .stage-flowering .plant-stem { height: 120px; }
+        .stage-flowering .leaf { opacity: 1; }
+        .stage-flowering .bud { opacity: 1; }
+
+        .stage-harvest .plant-stem { height: 120px; }
+        .stage-harvest .leaf { opacity: 1; }
+        .stage-harvest .bud { 
+            opacity: 1; 
+            background: #8B4513;
+            width: 16px;
+            height: 16px;
+        }
+
+        .grow-session-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .session-title {
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 0.5rem;
+        }
+
+        .session-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+
+        .quick-actions {
+            margin-top: 1rem;
+        }
+
+        .quick-actions button {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .quick-actions button:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #6c757d !important;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268 !important;
+        }
+        .page-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 300;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .calendar-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+        }
+
+        .month-year {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c5530;
+            margin: 0 1rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .calendar-day-header {
+            background: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 120px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            position: relative;
+            border: 1px solid transparent;
+        }
+
+        .calendar-day:hover {
+            background: #f5f5f5;
+        }
+
+        .calendar-day.other-month {
+            background: #f9f9f9;
+            color: #999;
+        }
+
+        .calendar-day.today {
+            background: #e8f5e8;
+            border-color: #4CAF50;
+        }
+
+        .calendar-day.has-note {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .day-note {
+            font-size: 0.8rem;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        .note-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .note-modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .note-modal h3 {
+            color: #2c5530;
+            margin-bottom: 1rem;
+        }
+
+        .note-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        .note-textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .close-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .close-btn:hover {
+            background: #5a6268;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-seedling"></i>
+                GrowWiz
+            </div>
+            <nav class="nav">
+                <a href="/">Dashboard</a>
+                <a href="/strain-identification">Strain ID</a>
+                <a href="/grow-calendar" class="active">Calendar</a>
+                <a href="/comprehensive">GrowTools</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">Grow Calendar & Management</h1>
+        
+        <!-- Grow Setup Controls -->
+        <div class="grow-controls">
+            <h3><i class="fas fa-cog"></i> Grow Setup</h3>
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="strainSelect">Strain:</label>
+                    <select id="strainSelect">
+                        <option value="">Select Strain...</option>
+                        <option value="blue-dream">Blue Dream</option>
+                        <option value="og-kush">OG Kush</option>
+                        <option value="white-widow">White Widow</option>
+                        <option value="northern-lights">Northern Lights</option>
+                        <option value="sour-diesel">Sour Diesel</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="growMethod">Growing Method:</label>
+                    <select id="growMethod">
+                        <option value="soil">Soil</option>
+                        <option value="hydroponic">Hydroponic</option>
+                        <option value="coco">Coco Coir</option>
+                        <option value="dwc">Deep Water Culture</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="plantCount">Plant Count:</label>
+                    <input type="number" id="plantCount" min="1" max="50" value="1">
+                </div>
+            </div>
+            <div class="control-row">
+                <div class="control-group">
+                    <label for="startDate">Start Date:</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="control-group">
+                    <label for="currentPhase">Current Phase:</label>
+                    <select id="currentPhase">
+                        <option value="germination">Germination</option>
+                        <option value="seedling">Seedling</option>
+                        <option value="vegetative">Vegetative</option>
+                        <option value="flowering">Flowering</option>
+                        <option value="harvest">Harvest</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="sessionName">Session Name:</label>
+                    <input type="text" id="sessionName" placeholder="e.g., Winter 2024 Grow">
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <button id="prevMonth" class="nav-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 id="currentMonth"></h2>
+                    <button id="nextMonth" class="nav-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <div class="sidebar">
+                <!-- Interactive Plant Visualization -->
+                <div class="interactive-plant stage-germination" id="interactivePlant">
+                    <h3><i class="fas fa-seedling"></i> Your Plant</h3>
+                    <div class="plant-container">
+                        <div class="plant-stem" id="plantStem">
+                            <div class="plant-leaves">
+                                <div class="leaf"></div>
+                                <div class="leaf"></div>
+                                <div class="leaf"></div>
+                                <div class="leaf"></div>
+                                <div class="leaf"></div>
+                                <div class="leaf"></div>
+                            </div>
+                            <div class="plant-buds">
+                                <div class="bud"></div>
+                                <div class="bud"></div>
+                                <div class="bud"></div>
+                                <div class="bud"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="plant-info">
+                        <div class="growth-stage" id="growthStage">Germination Stage</div>
+                        <div class="plant-stats">
+                            <div class="stat">
+                                <div class="stat-value" id="dayCount">Day 1</div>
+                                <div>Days</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value" id="phaseProgress">10%</div>
+                                <div>Phase</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value" id="totalProgress">1%</div>
+                                <div>Total</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3><i class="fas fa-list"></i> Active Sessions</h3>
+                <div id="activeSessions">
+                    <!-- Sessions will be loaded here -->
+                </div>
+
+                <div class="quick-actions">
+                    <button onclick="createNewSession()">
+                        <i class="fas fa-plus"></i> New Grow Session
+                    </button>
+                    <button onclick="scheduleTask()" class="btn-secondary">
+                        <i class="fas fa-calendar-plus"></i> Schedule Task
+                    </button>
+                    <button onclick="viewGrowLog()" class="btn-secondary">
+                        <i class="fas fa-book"></i> View Grow Log
+                    </button>
+                </div>
+
+                <h3 style="margin-top: 2rem;"><i class="fas fa-info-circle"></i> Today's Tasks</h3>
+                <div id="todaysTasks">
+                    <!-- Today's tasks will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="noteModal" class="note-modal">
+        <div class="note-modal-content">
+            <h3 id="noteModalTitle">Add Note</h3>
+            <textarea id="noteTextarea" class="note-textarea" placeholder="Enter your notes for this day..."></textarea>
+            <div class="modal-buttons">
+                <button class="close-btn" onclick="closeNoteModal()">Cancel</button>
+                <button class="nav-btn" onclick="saveNote()">Save Note</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentDate = new Date();
+        let currentGrowSession = null;
+        let growEvents = {};
+        let dailyNotes = {};
+
+        // Initialize calendar on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCalendar();
+            loadActiveSessions();
+            loadTodaysTasks();
+            setDefaultDate();
+        });
+
+        function setDefaultDate() {
+            const today = new Date();
+            document.getElementById('startDate').value = today.toISOString().split('T')[0];
+        }
+
+        function initializeCalendar() {
+            updateCalendarDisplay();
+            
+            // Event listeners
+            document.getElementById('prevMonth').addEventListener('click', previousMonth);
+            document.getElementById('nextMonth').addEventListener('click', nextMonth);
+            
+            // Grow setup change listeners
+            document.getElementById('strainSelect').addEventListener('change', updateGrowSetup);
+            document.getElementById('growMethod').addEventListener('change', updateGrowSetup);
+            document.getElementById('currentPhase').addEventListener('change', updateGrowSetup);
+            document.getElementById('plantCount').addEventListener('change', updateGrowSetup);
+            document.getElementById('startDate').addEventListener('change', updateGrowSetup);
+            document.getElementById('sessionName').addEventListener('change', updateGrowSetup);
+        }
+
+        function updateCalendarDisplay() {
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            document.getElementById('currentMonth').textContent = 
+                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            
+            generateCalendarGrid();
+        }
+
+        function generateCalendarGrid() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            // Add day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            // Generate calendar days
+            for (let i = 0; i < 42; i++) {
+                const dayDate = new Date(startDate);
+                dayDate.setDate(startDate.getDate() + i);
+                
+                const dayElement = createDayElement(dayDate);
+                grid.appendChild(dayElement);
+            }
+        }
+
+        function createDayElement(date) {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            
+            const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+            const isToday = date.toDateString() === new Date().toDateString();
+            
+            if (!isCurrentMonth) {
+                dayElement.classList.add('other-month');
+            }
+            if (isToday) {
+                dayElement.classList.add('today');
+            }
+            
+            // Day number
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = date.getDate();
+            dayElement.appendChild(dayNumber);
+            
+            // Grow events for this day
+            const dateKey = date.toISOString().split('T')[0];
+            const events = growEvents[dateKey] || [];
+            
+            events.forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = `grow-event event-${event.type}`;
+                eventElement.textContent = event.title;
+                dayElement.appendChild(eventElement);
+            });
+            
+            // Add grow phase indicator if applicable
+            if (currentGrowSession && isCurrentMonth) {
+                const phaseInfo = getGrowPhaseForDate(date);
+                if (phaseInfo) {
+                    const phaseElement = document.createElement('div');
+                    phaseElement.className = `phase-indicator phase-${phaseInfo.phase}`;
+                    phaseElement.textContent = phaseInfo.day;
+                    dayElement.appendChild(phaseElement);
+                }
+            }
+            
+            // Click handler for notes
+            dayElement.addEventListener('click', () => openDayModal(date));
+            
+            return dayElement;
+        }
+
+        function getGrowPhaseForDate(date) {
+            if (!currentGrowSession || !currentGrowSession.startDate) return null;
+            
+            const startDate = new Date(currentGrowSession.startDate);
+            const daysDiff = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff < 0) return null;
+            
+            // Define phase durations (in days)
+            const phases = [
+                { phase: 'germination', duration: 7, label: 'Germ' },
+                { phase: 'seedling', duration: 14, label: 'Seed' },
+                { phase: 'vegetative', duration: 42, label: 'Veg' },
+                { phase: 'flowering', duration: 56, label: 'Flower' },
+                { phase: 'harvest', duration: 7, label: 'Harvest' }
+            ];
+            
+            let totalDays = 0;
+            for (const phase of phases) {
+                if (daysDiff < totalDays + phase.duration) {
+                    const phaseDay = daysDiff - totalDays + 1;
+                    return {
+                        phase: phase.phase,
+                        day: `${phase.label} ${phaseDay}`
+                    };
+                }
+                totalDays += phase.duration;
+            }
+            
+            return { phase: 'complete', day: 'Done' };
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            updateCalendarDisplay();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            updateCalendarDisplay();
+        }
+
+        function updateGrowSetup() {
+            const strain = document.getElementById('strainSelect').value;
+            const method = document.getElementById('growMethod').value;
+            const phase = document.getElementById('currentPhase').value;
+            const plantCount = document.getElementById('plantCount').value;
+            const startDate = document.getElementById('startDate').value;
+            const sessionName = document.getElementById('sessionName').value;
+            
+            if (strain && method && startDate && sessionName) {
+                currentGrowSession = {
+                    id: Date.now(),
+                    name: sessionName,
+                    strain: strain,
+                    method: method,
+                    phase: phase,
+                    plantCount: parseInt(plantCount),
+                    startDate: startDate,
+                    createdAt: new Date().toISOString()
+                };
+                
+                generateGrowSchedule();
+                updateCalendarDisplay();
+                updateInteractivePlant();
+                saveGrowSession();
+            }
+        }
+
+        function updateInteractivePlant() {
+            if (!currentGrowSession) return;
+            
+            const startDate = new Date(currentGrowSession.startDate);
+            const today = new Date();
+            const daysSinceStart = Math.max(0, Math.floor((today - startDate) / (1000 * 60 * 60 * 24)));
+            
+            // Define growth phases with durations
+            const phases = [
+                { name: 'germination', duration: 7, label: 'Germination Stage' },
+                { name: 'seedling', duration: 14, label: 'Seedling Stage' },
+                { name: 'vegetative', duration: 42, label: 'Vegetative Stage' },
+                { name: 'flowering', duration: 56, label: 'Flowering Stage' },
+                { name: 'harvest', duration: 7, label: 'Harvest Ready' }
+            ];
+            
+            let currentPhase = phases[0];
+            let totalDays = 0;
+            let phaseDay = daysSinceStart + 1;
+            
+            // Determine current phase
+            for (let i = 0; i < phases.length; i++) {
+                if (daysSinceStart < totalDays + phases[i].duration) {
+                    currentPhase = phases[i];
+                    phaseDay = daysSinceStart - totalDays + 1;
+                    break;
+                }
+                totalDays += phases[i].duration;
+            }
+            
+            // If past all phases, set to harvest
+            if (daysSinceStart >= 126) { // Total grow cycle
+                currentPhase = phases[4];
+                phaseDay = Math.min(daysSinceStart - 119, 7);
+            }
+            
+            // Update plant visual
+            const plantContainer = document.getElementById('interactivePlant');
+            plantContainer.className = `interactive-plant stage-${currentPhase.name}`;
+            
+            // Update plant info
+            document.getElementById('growthStage').textContent = currentPhase.label;
+            document.getElementById('dayCount').textContent = `Day ${daysSinceStart + 1}`;
+            
+            // Calculate progress percentages
+            const phaseProgress = Math.min(100, Math.round((phaseDay / currentPhase.duration) * 100));
+            const totalProgress = Math.min(100, Math.round((daysSinceStart / 126) * 100));
+            
+            document.getElementById('phaseProgress').textContent = `${phaseProgress}%`;
+            document.getElementById('totalProgress').textContent = `${totalProgress}%`;
+            
+            // Add some visual flair based on strain
+            if (currentGrowSession.strain) {
+                const strainColors = {
+                    'blue-dream': '#4A90E2',
+                    'og-kush': '#7ED321',
+                    'white-widow': '#F5A623',
+                    'northern-lights': '#9013FE',
+                    'sour-diesel': '#50E3C2'
+                };
+                
+                const color = strainColors[currentGrowSession.strain] || '#4CAF50';
+                const leaves = plantContainer.querySelectorAll('.leaf');
+                leaves.forEach(leaf => {
+                    leaf.style.background = color;
+                });
+            }
+        }
+
+        // Update plant every minute to show real-time growth
+        setInterval(updateInteractivePlant, 60000);
+        
+        function generateGrowSchedule() {
+            if (!currentGrowSession) return;
+            
+            growEvents = {};
+            const startDate = new Date(currentGrowSession.startDate);
+            
+            // Generate watering schedule
+            for (let i = 0; i < 126; i += 3) { // Water every 3 days for 18 weeks
+                const waterDate = new Date(startDate);
+                waterDate.setDate(startDate.getDate() + i);
+                const dateKey = waterDate.toISOString().split('T')[0];
+                
+                if (!growEvents[dateKey]) growEvents[dateKey] = [];
+                growEvents[dateKey].push({
+                    type: 'water',
+                    title: 'Water Plants',
+                    description: 'Check soil moisture and water as needed'
+                });
+            }
+            
+            // Generate feeding schedule
+            for (let i = 7; i < 126; i += 7) { // Feed weekly
+                const feedDate = new Date(startDate);
+                feedDate.setDate(startDate.getDate() + i);
+                const dateKey = feedDate.toISOString().split('T')[0];
+                
+                if (!growEvents[dateKey]) growEvents[dateKey] = [];
+                growEvents[dateKey].push({
+                    type: 'feed',
+                    title: 'Feed Plants',
+                    description: 'Apply nutrients according to growth phase'
+                });
+            }
+            
+            // Add phase transition events
+            const phaseEvents = [
+                { day: 7, title: 'Seedling Phase', type: 'phase' },
+                { day: 21, title: 'Vegetative Phase', type: 'phase' },
+                { day: 63, title: 'Flowering Phase', type: 'phase' },
+                { day: 119, title: 'Harvest Time', type: 'harvest' }
+            ];
+            
+            phaseEvents.forEach(event => {
+                const eventDate = new Date(startDate);
+                eventDate.setDate(startDate.getDate() + event.day);
+                const dateKey = eventDate.toISOString().split('T')[0];
+                
+                if (!growEvents[dateKey]) growEvents[dateKey] = [];
+                growEvents[dateKey].push({
+                    type: event.type,
+                    title: event.title,
+                    description: `Transition to ${event.title.toLowerCase()}`
+                });
+            });
+        }
+
+        function openDayModal(date) {
+            const dateKey = date.toISOString().split('T')[0];
+            const events = growEvents[dateKey] || [];
+            const note = dailyNotes[dateKey] || '';
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>${date.toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        })}</h3>
+                        <button class="close-btn" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="events-section">
+                            <h4>Scheduled Events</h4>
+                            ${events.length > 0 ? 
+                                events.map(event => `
+                                    <div class="event-item event-${event.type}">
+                                        <strong>${event.title}</strong>
+                                        <p>${event.description}</p>
+                                    </div>
+                                `).join('') : 
+                                '<p>No scheduled events</p>'
+                            }
+                        </div>
+                        <div class="notes-section">
+                            <h4>Notes</h4>
+                            <textarea id="dayNote" placeholder="Add your notes for this day...">${note}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button onclick="saveDayNote('${dateKey}')" class="save-btn">Save Note</button>
+                        <button onclick="addCustomEvent('${dateKey}')" class="add-event-btn">Add Event</button>
+                        <button onclick="closeModal()" class="cancel-btn">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function closeModal() {
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function saveDayNote(dateKey) {
+            const noteText = document.getElementById('dayNote').value;
+            dailyNotes[dateKey] = noteText;
+            
+            // Save to localStorage
+            localStorage.setItem('growWiz_dailyNotes', JSON.stringify(dailyNotes));
+            
+            showAlert('Note saved successfully!');
+            closeModal();
+        }
+
+        function addCustomEvent(dateKey) {
+            const eventTitle = prompt('Event title:');
+            const eventType = prompt('Event type (water, feed, prune, other):') || 'other';
+            
+            if (eventTitle) {
+                if (!growEvents[dateKey]) growEvents[dateKey] = [];
+                growEvents[dateKey].push({
+                    type: eventType,
+                    title: eventTitle,
+                    description: 'Custom event',
+                    custom: true
+                });
+                
+                updateCalendarDisplay();
+                closeModal();
+                showAlert('Event added successfully!');
+            }
+        }
+
+        function loadActiveSessions() {
+            const sessionsContainer = document.getElementById('activeSessions');
+            const savedSessions = JSON.parse(localStorage.getItem('growWiz_sessions') || '[]');
+            
+            if (savedSessions.length === 0) {
+                sessionsContainer.innerHTML = '<p>No active grow sessions</p>';
+                return;
+            }
+            
+            sessionsContainer.innerHTML = savedSessions.map(session => `
+                <div class="grow-session-card" onclick="loadGrowSession(${session.id})">
+                    <div class="session-title">${session.name}</div>
+                    <div class="session-info">Strain: ${session.strain}</div>
+                    <div class="session-info">Method: ${session.method}</div>
+                    <div class="session-info">Started: ${new Date(session.startDate).toLocaleDateString()}</div>
+                    <div class="session-info">
+                        Phase: <span class="phase-indicator phase-${session.phase}">${session.phase}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadGrowSession(sessionId) {
+            const savedSessions = JSON.parse(localStorage.getItem('growWiz_sessions') || '[]');
+            const session = savedSessions.find(s => s.id === sessionId);
+            
+            if (session) {
+                currentGrowSession = session;
+                
+                // Update form fields
+                document.getElementById('strainSelect').value = session.strain;
+                document.getElementById('growMethod').value = session.method;
+                document.getElementById('currentPhase').value = session.phase;
+                document.getElementById('plantCount').value = session.plantCount;
+                document.getElementById('startDate').value = session.startDate;
+                document.getElementById('sessionName').value = session.name;
+                
+                generateGrowSchedule();
+                updateCalendarDisplay();
+                showAlert(`Loaded grow session: ${session.name}`);
+            }
+        }
+
+        function saveGrowSession() {
+            if (!currentGrowSession) return;
+            
+            const savedSessions = JSON.parse(localStorage.getItem('growWiz_sessions') || '[]');
+            const existingIndex = savedSessions.findIndex(s => s.id === currentGrowSession.id);
+            
+            if (existingIndex >= 0) {
+                savedSessions[existingIndex] = currentGrowSession;
+            } else {
+                savedSessions.push(currentGrowSession);
+            }
+            
+            localStorage.setItem('growWiz_sessions', JSON.stringify(savedSessions));
+            loadActiveSessions();
+        }
+
+        function createNewSession() {
+            // Clear current session
+            currentGrowSession = null;
+            growEvents = {};
+            
+            // Reset form
+            document.getElementById('strainSelect').value = '';
+            document.getElementById('growMethod').value = 'soil';
+            document.getElementById('currentPhase').value = 'germination';
+            document.getElementById('plantCount').value = '1';
+            document.getElementById('sessionName').value = '';
+            setDefaultDate();
+            
+            updateCalendarDisplay();
+            showAlert('Ready to create new grow session. Fill out the form above.');
+        }
+
+        function scheduleTask() {
+            const date = prompt('Enter date (YYYY-MM-DD):');
+            const task = prompt('Enter task description:');
+            const type = prompt('Task type (water, feed, prune, other):') || 'other';
+            
+            if (date && task) {
+                if (!growEvents[date]) growEvents[date] = [];
+                growEvents[date].push({
+                    type: type,
+                    title: task,
+                    description: 'Scheduled task',
+                    custom: true
+                });
+                
+                updateCalendarDisplay();
+                showAlert('Task scheduled successfully!');
+            }
+        }
+
+        function viewGrowLog() {
+            showAlert('Grow log feature coming soon!');
+        }
+
+        function loadTodaysTasks() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayEvents = growEvents[today] || [];
+            const tasksContainer = document.getElementById('todaysTasks');
+            
+            if (todayEvents.length === 0) {
+                tasksContainer.innerHTML = '<p>No tasks scheduled for today</p>';
+                return;
+            }
+            
+            tasksContainer.innerHTML = todayEvents.map(event => `
+                <div class="task-item event-${event.type}">
+                    <strong>${event.title}</strong>
+                    <p>${event.description}</p>
+                </div>
+            `).join('');
+        }
+
+        function showAlert(message) {
+            const alert = document.createElement('div');
+            alert.className = 'custom-alert';
+            alert.textContent = message;
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => alert.remove(), 300);
+            }, 3000);
+        }
+
+        // Load saved data on page load
+        window.addEventListener('load', function() {
+            const savedNotes = localStorage.getItem('growWiz_dailyNotes');
+            if (savedNotes) {
+                dailyNotes = JSON.parse(savedNotes);
+            }
+        });
+    </script>
+</body>
+</html>

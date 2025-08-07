@@ -1,0 +1,38 @@
+{
+  "test_scenarios": {
+    "normal_conditions": {
+      "temperature": 24.5,
+      "humidity": 65.0,
+      "soil_moisture": 45.0,
+      "co2": 400,
+      "light_level": 75.0,
+      "ph": 6.2
+    },
+    "stress_conditions": {
+      "temperature": 32.0,
+      "humidity": 85.0,
+      "soil_moisture": 20.0,
+      "co2": 1200,
+      "light_level": 95.0,
+      "ph": 5.8
+    },
+    "optimal_flowering": {
+      "temperature": 22.0,
+      "humidity": 50.0,
+      "soil_moisture": 60.0,
+      "co2": 800,
+      "light_level": 85.0,
+      "ph": 6.5
+    },
+    "germination": {
+      "temperature": 26.0,
+      "humidity": 75.0,
+      "soil_moisture": 70.0,
+      "co2": 350,
+      "light_level": 40.0,
+      "ph": 6.0
+    }
+  },
+  "current_scenario": "normal_conditions",
+  "last_updated": "2024-01-15T10:30:00Z"
+}

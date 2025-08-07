@@ -134,8 +134,44 @@ class GDriveStrainManager:
             
             logger.info(f"Created local files for {strain_name}, ready for Google Drive upload")
             
-            # Note: Actual file upload would require additional Google Drive API integration
-            # For now, we'll simulate successful upload
+            # Attempt actual file upload using gdrive_operations
+            try:
+                # Upload info file
+                info_result = await gdrive_operations(
+                    operation="upload_file",
+                    file_path=str(info_file),
+                    parent_folder_id=strain_folder_id,
+                    file_name=f"{safe_name}_info.json"
+                )
+                
+                # Upload summary file
+                summary_result = await gdrive_operations(
+                    operation="upload_file",
+                    file_path=str(summary_file),
+                    parent_folder_id=strain_folder_id,
+                    file_name=f"{safe_name}_summary.txt"
+                )
+                
+                # Upload guide file
+                guide_result = await gdrive_operations(
+                    operation="upload_file",
+                    file_path=str(guide_file),
+                    parent_folder_id=strain_folder_id,
+                    file_name=f"{safe_name}_growing_guide.md"
+                )
+                
+                upload_success = (info_result.get('success', False) and 
+                                summary_result.get('success', False) and 
+                                guide_result.get('success', False))
+                
+                if upload_success:
+                    logger.info(f"Successfully uploaded all files for {strain_name}")
+                else:
+                    logger.warning(f"Some files failed to upload for {strain_name}")
+                    
+            except Exception as upload_error:
+                logger.error(f"Error during file upload: {upload_error}")
+                upload_success = False
             
             # Clean up temp files
             for file in [info_file, summary_file, guide_file]:
@@ -145,8 +181,7 @@ class GDriveStrainManager:
             if temp_dir.exists() and not any(temp_dir.iterdir()):
                 temp_dir.rmdir()
             
-            logger.info(f"Successfully uploaded strain data for {strain_name}")
-            return True
+            return upload_success
             
         except Exception as e:
             logger.error(f"Error uploading strain data: {e}")

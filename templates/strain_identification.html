@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strain Identification - GrowWiz</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+    <style>
+        .strain-id-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            color: #a0aec0;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .nav-link.active {
+            color: #28a745;
+            background: rgba(40, 167, 69, 0.15);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+        
+        .upload-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .upload-zone {
+            border: 3px dashed rgba(255,255,255,0.5);
+            border-radius: 10px;
+            padding: 40px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .upload-zone i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        
+        .upload-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.8);
+        }
+        
+        .results-section {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .image-preview {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .strain-match {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .strain-match.primary {
+            border-left-color: #007bff;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        }
+        
+        .confidence-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .strain-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .detail-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            color: #495057;
+            font-size: 1.1em;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .system-status {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .system-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        
+        .visual-analysis {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .analysis-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        
+        .analysis-item i {
+            margin-right: 10px;
+            width: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-seedling"></i>
+                GrowWiz
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+                <a href="/strain-identification" class="nav-link active">
+                    <i class="fas fa-search"></i>
+                    Strain ID
+                </a>
+                <a href="/grow-calendar" class="nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    Grow Calendar
+                </a>
+                <a href="/comprehensive" class="nav-link">
+                    <i class="fas fa-tools"></i>
+                    GrowTools
+                </a>
+            </nav>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="system-status">System Online</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="strain-id-container">
+        <h1><i class="fas fa-search"></i> Strain Identification</h1>
+        <p class="subtitle">Upload a photo of your cannabis bud for AI-powered strain identification</p>
+        
+        <!-- System Status -->
+        <div id="systemStatus" class="system-status">
+            <i class="fas fa-spinner fa-spin"></i> Checking system status...
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2><i class="fas fa-camera"></i> Upload Bud Image</h2>
+            <p>Take a clear, well-lit photo of your cannabis bud for the most accurate identification</p>
+            
+            <div class="upload-zone" id="uploadZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Drop your image here</h3>
+                <p>or click to browse files</p>
+                <div class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-folder-open"></i> Choose File
+                </div>
+            </div>
+            
+            <input type="file" id="fileInput" class="file-input" accept="image/*">
+            
+            <div class="supported-formats">
+                <small><i class="fas fa-info-circle"></i> Supported formats: JPG, PNG, WEBP, GIF, BMP (Max 16MB)</small>
+            </div>
+        </div>
+        
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <h3>Analyzing your bud...</h3>
+            <p>Our AI is examining color, texture, and structure patterns</p>
+        </div>
+        
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section">
+            <h2><i class="fas fa-microscope"></i> Identification Results</h2>
+            
+            <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
+                <div>
+                    <img id="imagePreview" class="image-preview" alt="Uploaded bud image">
+                </div>
+                
+                <div style="flex: 1; min-width: 300px;">
+                    <div id="primaryMatch" class="strain-match primary">
+                        <!-- Primary match will be populated here -->
+                    </div>
+                    
+                    <div id="visualAnalysis" class="visual-analysis">
+                        <h4><i class="fas fa-eye"></i> Visual Analysis</h4>
+                        <div id="analysisDetails">
+                            <!-- Analysis details will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3><i class="fas fa-list"></i> Additional Matches</h3>
+            <div id="additionalMatches">
+                <!-- Additional matches will be populated here -->
+            </div>
+        </div>
+        
+        <!-- Error Section -->
+        <div id="errorSection" class="error-message" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="errorMessage"></span>
+        </div>
+    </div>
+
+    <script>
+        let systemAvailable = false;
+        
+        // Check system status on load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSystemStatus();
+            setupFileUpload();
+        });
+        
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch('/api/strain/identify/status');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server returned non-JSON response');
+                }
+                
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('systemStatus');
+                
+                if (data.available) {
+                    systemAvailable = true;
+                    statusDiv.innerHTML = `
+                        <i class="fas fa-check-circle"></i> 
+                        Strain identification system online - ${data.total_strains} strains in database
+                        ${data.simulation_mode ? ' (Simulation Mode)' : ''}
+                    `;
+                    statusDiv.className = 'system-status';
+                } else {
+                    systemAvailable = false;
+                    statusDiv.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Strain identification system offline - ${data.error || 'Unknown error'}
+                    `;
+                    statusDiv.className = 'system-status offline';
+                }
+            } catch (error) {
+                systemAvailable = false;
+                const statusDiv = document.getElementById('systemStatus');
+                statusDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Unable to connect to identification system - ${error.message}
+                `;
+                statusDiv.className = 'system-status offline';
+                console.error('System status check failed:', error);
+            }
+        }
+        
+        function setupFileUpload() {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            uploadZone.addEventListener('click', () => {
+                if (systemAvailable) {
+                    fileInput.click();
+                }
+            });
+            
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+            
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+            
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                
+                if (systemAvailable && e.dataTransfer.files.length > 0) {
+                    handleFileUpload(e.dataTransfer.files[0]);
+                }
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+        }
+        
+        async function handleFileUpload(file) {
+            if (!systemAvailable) {
+                showError('Strain identification system is not available');
+                return;
+            }
+            
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'];
+            if (!validTypes.includes(file.type)) {
+                showError('Please upload a valid image file (JPG, PNG, WEBP, GIF, BMP)');
+                return;
+            }
+            
+            if (file.size > 16 * 1024 * 1024) {
+                showError('File size must be less than 16MB');
+                return;
+            }
+            
+            showLoading();
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('top_k', '5');
+            
+            try {
+                const response = await fetch('/api/strain/identify', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data, file);
+                } else {
+                    showError(data.error || 'Failed to identify strain');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function displayResults(data, file) {
+            const resultsSection = document.getElementById('resultsSection');
+            const imagePreview = document.getElementById('imagePreview');
+            const primaryMatch = document.getElementById('primaryMatch');
+            const additionalMatches = document.getElementById('additionalMatches');
+            const visualAnalysis = document.getElementById('analysisDetails');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            const primary = data.identification.primary_match;
+            if (primary) {
+                primaryMatch.innerHTML = `
+                    <h3><i class="fas fa-trophy"></i> Primary Match: ${primary.strain_name}</h3>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${(primary.confidence * 100).toFixed(1)}%"></div>
+                    </div>
+                    <p><strong>Confidence:</strong> ${(primary.confidence * 100).toFixed(1)}%</p>
+                    
+                    <div class="strain-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Type</div>
+                            <div class="detail-value">${primary.strain_data.strain_type || 'Unknown'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">THC Content</div>
+                            <div class="detail-value">${primary.strain_data.thc_content || 'Unknown'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">CBD Content</div>
+                            <div class="detail-value">${primary.strain_data.cbd_content || 'Unknown'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Effects</div>
+                            <div class="detail-value">${(primary.strain_data.effects || []).join(', ') || 'Unknown'}</div>
+                        </div>
+                    </div>
+                    
+                    <p style="margin-top: 15px; color: #6c757d;">
+                        ${primary.strain_data.description || 'No description available.'}
+                    </p>
+                `;
+            }
+            
+            const additional = data.identification.top_matches.slice(1);
+            additionalMatches.innerHTML = additional.map(match => `
+                <div class="strain-match">
+                    <h4>${match.strain_name}</h4>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${(match.confidence * 100).toFixed(1)}%"></div>
+                    </div>
+                    <p><strong>Confidence:</strong> ${(match.confidence * 100).toFixed(1)}% | 
+                       <strong>Type:</strong> ${match.strain_data.strain_type || 'Unknown'}</p>
+                </div>
+            `).join('');
+            
+            const analysis = data.visual_analysis;
+            visualAnalysis.innerHTML = `
+                <div class="analysis-item">
+                    <i class="fas fa-palette" style="color: ${analysis.color_analysis ? '#28a745' : '#dc3545'}"></i>
+                    Color Analysis: ${analysis.color_analysis ? 'Completed' : 'Failed'}
+                </div>
+                <div class="analysis-item">
+                    <i class="fas fa-texture" style="color: ${analysis.texture_analysis ? '#28a745' : '#dc3545'}"></i>
+                    Texture Analysis: ${analysis.texture_analysis ? 'Completed' : 'Failed'}
+                </div>
+                <div class="analysis-item">
+                    <i class="fas fa-shapes" style="color: ${analysis.shape_analysis ? '#28a745' : '#dc3545'}"></i>
+                    Shape Analysis: ${analysis.shape_analysis ? 'Completed' : 'Failed'}
+                </div>
+                <div class="analysis-item">
+                    <i class="fas fa-database"></i>
+                    Compared against ${data.identification.total_compared} strains
+                </div>
+            `;
+            
+            resultsSection.style.display = 'block';
+            hideError();
+        }
+        
+        function showLoading() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            hideError();
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+        
+        function showError(message) {
+            const errorSection = document.getElementById('errorSection');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            errorMessage.textContent = message;
+            errorSection.style.display = 'block';
+            
+            hideLoading();
+        }
+        
+        function hideError() {
+            document.getElementById('errorSection').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
